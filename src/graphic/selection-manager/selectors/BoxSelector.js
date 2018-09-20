@@ -65,6 +65,8 @@ class BoxSelector extends BaseSelector {
       return
     }
 
+    e.stopPropagation()
+
     const { Graphic, Polygon, SpatialReference } = this._modules
     const { mapPoint } = e
     const polygon = new Polygon(new SpatialReference({ wkid: 102100 }))
@@ -76,6 +78,8 @@ class BoxSelector extends BaseSelector {
 
   _mapMouseMoveHandler = e => {
     if (this._startPoint) {
+      e.stopPropagation()
+
       const { Extent, Polygon } = this._modules
       const { mapPoint } = e
       const ext = new Extent({
@@ -90,6 +94,8 @@ class BoxSelector extends BaseSelector {
 
   _mapMouseUpHandler = e => {
     if (this._boxGraphic) {
+      e.stopPropagation()
+
       this._computeIntersects(this._boxGraphic.geometry)
       this._tempGraphicsLayer.remove(this._boxGraphic)
       this._boxGraphic = null
