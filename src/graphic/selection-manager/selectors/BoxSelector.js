@@ -1,115 +1,122 @@
-import BaseOperation from './BaseOperation'
+import BaseSelector from './BaseSelector'
+import Loader from 'esri-module-loader'
 
-const OP_TYPE = 'box-select'
-class BoxSelectOperation extends BaseOperation {
+class BoxSelector extends BaseSelector {
+  
   constructor (args) {
     super(args)
 
-    this.graphicsLayer = null
-    this.startPoint = null
-    this.boxGraphic = null
-    this.eventHandlers = []
-    this.type = OP_TYPE
+    this._tempGraphicsLayer = null
+    this._startPoint = null
+    this._boxGraphic = null
+
+    this._ready = false
+    this._modules = {}
+    this._handlers = []
+
+    this._init()
   }
 
-  _createGraphicsLayer () {
-    const { map, constructorMapping } = this
-    const { GraphicsLayer } = constructorMapping
-    const graphicsLayer = new GraphicsLayer({ id: 'GraphicBoxSelectTempGraphicsLayer' })
-    map.addLayer(graphicsLayer)
-    return graphicsLayer
+  _init () {
+    Loader.loadModules([
+      'GraphicsLayer', 'Color', 'SimpleLineSymbol', 'Graphic', 'Polygon',
+      'Extent', 'SpatialReference', 'geometryEngine'
+    ]).then(modules => {
+      this._modules = modules
+      this._createTempGraphicsLayer() 
+      this._ready = true
+    })
   }
 
-  _removeGraphicsLayer () {
-    if (this.graphicsLayer) {
-      this.map.removeLayer(this.graphicsLayer)
+  _createTempGraphicsLayer () {
+    const { map } = this.selectionManager
+    const { GraphicsLayer } = this._modules
+    const graphicsLayer = new GraphicsLayer({ id: '__box_selector_temp_graphics_layer__' })
+    map.addLayer(this._tempGraphicsLayer = graphicsLayer)
+  }
+
+  _removeTempGraphicsLayer () {
+    const { map } = this.selectionManager
+    if (this._tempGraphicsLayer) {
+      map.removeLayer(this._tempGraphicsLayer)
     }
   }
 
-  _reset () {
-    this._dettachEvents()
-    this._removeGraphicsLayer()
-    this.boxGraphic = null
-    this.startPoint = null
-    this.map.enableMapNavigation()
+  _bindEvents () {
+    const { map } = this.selectionManager
+    this._handlers = [
+      map.on('mouse-drag-start', this._mapMouseDownHandler),
+      map.on('mouse-drag', this._mapMouseMoveHandler),
+      map.on('mouse-drag-end', this._mapMouseUpHandler)
+    ]
   }
 
-  _attachEvents () {
-    this.eventHandlers.push(this.map.on('mouse-drag-start', this._mapMouseDownHandler))
-    this.eventHandlers.push(this.map.on('mouse-drag', this._mapMouseMoveHandler))
-    this.eventHandlers.push(this.map.on('mouse-drag-end', this._mapMouseUpHandler))
-  }
-
-  _dettachEvents () {
-    this.eventHandlers.forEach(h => h.remove())
+  _unbindEvents () {
+    this._handlers.forEach(h => h.remove())
   }
 
   _createLineSymbol () {
-    const { SimpleLineSymbol, Color } = this.constructorMapping
+    const { SimpleLineSymbol, Color } = this._modules
     return new SimpleLineSymbol( SimpleLineSymbol.STYLE_SOLID, new Color([255, 0, 0]), 1)
   }
 
   _mapMouseDownHandler = e => {
-    if (this.boxGraphic) {
+    if (!this._ready) {
       return
     }
 
-    const { Graphic, Polygon, SpatialReference } = this.constructorMapping
+    const { Graphic, Polygon, SpatialReference } = this._modules
     const { mapPoint } = e
     const polygon = new Polygon(new SpatialReference({ wkid: 102100 }))
 
-    this.startPoint = mapPoint
-    this.boxGraphic = new Graphic(polygon, this._createLineSymbol())
-    this.graphicsLayer.add(this.boxGraphic)
+    this._startPoint = mapPoint
+    this._boxGraphic = new Graphic(polygon, this._createLineSymbol())
+    this._tempGraphicsLayer.add(this._boxGraphic)
   }
 
   _mapMouseMoveHandler = e => {
-    if (this.boxGraphic) {
-      const { Extent, Polygon } = this.constructorMapping
+    if (this._startPoint) {
+      const { Extent, Polygon } = this._modules
       const { mapPoint } = e
       const ext = new Extent({
         xmin: Math.min(this.startPoint.x, mapPoint.x), ymin: Math.min(this.startPoint.y, mapPoint.y),
         xmax: Math.max(this.startPoint.x, mapPoint.x), ymax: Math.max(this.startPoint.y, mapPoint.y),
         spatialReference: { wkid: 102100 }
       })
-      this.boxGraphic.setGeometry(Polygon.fromExtent(ext))
-      this.boxGraphic.draw()
+      this._boxGraphic.setGeometry(Polygon.fromExtent(ext))
+      this._boxGraphic.draw()
     }
   }
 
   _mapMouseUpHandler = e => {
-    if (this.boxGraphic) {
-      this._computeIntersects(this.boxGraphic.geometry)
-      this.graphicsLayer.remove(this.boxGraphic)
-      this._reset()
+    if (this._boxGraphic) {
+      this._computeIntersects(this._boxGraphic.geometry)
+      this._tempGraphicsLayer.remove(this._boxGraphic)
+      this._boxGraphic = null
+      this._startPoint = null
     }
   }
 
   _computeIntersects (boxGeometry) {
-    const { geometryEngine } = this.constructorMapping
-    const selectedGraphics = this.operandGraphics.filter(g => geometryEngine.intersects(boxGeometry, g.geometry))
-    this.emit('completed', selectedGraphics)
+    const { selectionManager } = this
+    const { geometryEngine } = this._modules
+    const selectedGraphics = selectionManager.graphicsLayer.graphics.filter(g => geometryEngine.intersects(boxGeometry, g.geometry))
+    selectionManager.select(selectedGraphics)
   }
 
-  start () {
-    this._reset()
-    this.graphicsLayer = this._createGraphicsLayer()
-    this._attachEvents()
-    this.map.disableMapNavigation()
-    this.emit('started')
+  destroy () {
+    this._removeTempGraphicsLayer()
   }
 
-  // update (params) {}
-
-  cancel () {
-    this._reset()
-    this.map.enableMapNavigation()
-    this.emit('cancelled')
+  activate () {
+    this._bindEvents()
+    this.selectionManager.map.disableMapNavigation()
   }
 
-  // complete () {}
+  deactivate () {
+    this._unbindEvents()
+    this.selectionManager.map.enableMapNavigation()
+  }
 }
 
-BoxSelectOperation.TYPE = OP_TYPE
-
-export default BoxSelectOperation
+export default BoxSelector

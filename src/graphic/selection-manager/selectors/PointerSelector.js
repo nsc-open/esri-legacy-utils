@@ -2,8 +2,9 @@ import BaseSelector from './BaseSelector'
 
 class PointerSelector extends BaseSelector {
   
-  constructor (args) {
+  constructor (args, { multiSelect = true }) {
     super(args)
+    this._multiSelect = multiSelect
     this._handlers = []
   }
 
@@ -22,10 +23,6 @@ class PointerSelector extends BaseSelector {
   }
 
   _graphicClickHandler = e => {
-    if (!this._isActive()) {
-      return
-    }
-
     e.stopPropagation()
     const { graphic } = e
     const { selectionManager } = this
@@ -33,7 +30,7 @@ class PointerSelector extends BaseSelector {
     if (selectionManager.includes(graphic)) {
       selectionManager.remove(graphic)
     } else {
-      if (this._isMultiSelect()) {
+      if (this._multiSelect) {
         selectionManager.add(graphic)
       } else {
         selectionManager.select([graphic])
@@ -42,22 +39,16 @@ class PointerSelector extends BaseSelector {
   }
 
   _graphicMouseOverHandler = () => {
-    if (this._isActive()) {
-      this.selectionManager.map.setMapCursor('pointer')
-    }
+    this.selectionManager.map.setMapCursor('pointer')
   }
 
   _graphicMouseOutHandler = () => {
-    if (this._isActive()) {
-      this.selectionManager.map.setMapCursor('default')
-    }
+    this.selectionManager.map.setMapCursor('default')
   }
 
   _mapClickHandler = e => {
-    if (this._isActive()) {
-      e.stopPropagation()
-      this.selectionManager.clear()
-    }
+    e.stopPropagation()
+    this.selectionManager.clear()
   }
 
   activate () {

@@ -1,18 +1,11 @@
 class BaseSelector {
   
-  constructor (selectionManager, {
-    multiSelect = true
-  }) {
-    this.selectionManager = selectionManager
-    this._multiSelect = multiSelect
+  constructor (selectionManager) {
+    this.selectionManager = selectionManager    
   }
 
-  _isActive () {
-    return this.selectionManager._active
-  }
+  destroy () {
 
-  _isMultiSelect () {
-    return this._multiSelect
   }
 }
 

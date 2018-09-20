@@ -144,6 +144,7 @@ class GraphicSelectionManager extends EventEmitter {
   deactivate () {
     if (this._selector) {
       this._selector.deactivate()
+      this._selector.destroy()
       this._selector = null
     }
     this._active = false
