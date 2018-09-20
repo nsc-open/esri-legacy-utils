@@ -1,6 +1,7 @@
 import EventEmitter from 'eventemitter3'
-import differenceWith from 'lodash.differencewith'
+import differenceBy from 'lodash.differenceby'
 import shortid from 'shortid'
+
 import highlighter from './highlight'
 import BoxSelector from './selectors/BoxSelector'
 import PointerSelector from './selectors/PointerSelector'
@@ -25,7 +26,7 @@ class GraphicSelectionManager extends EventEmitter {
     /* public attributes */
     this.map = map
     this.graphicsLayer = graphicsLayer ? graphicsLayer : map.graphics
-    this.selections = []
+    this.selections = [] // [{ gid, graphic }]
 
     /* private attributes */
     this._comparator = comparator
@@ -41,34 +42,34 @@ class GraphicSelectionManager extends EventEmitter {
     const oldSelections = this.selections
     this.selections = newSelections
     this._update(newSelections, oldSelections)
-    this.emit('change', this.selections)
+    this.emit('change', this.getSelections())
   }
 
-  _saveOriginSymbol (graphic) {
-
+  _saveOriginSymbol ({ gid, graphic }) {
+    this._originSymbolsMapping[gid] = graphic.symbol
   }
 
-  _restoreOriginSymbol (graphic) {
-
+  _restoreOriginSymbol ({ gid, graphic }) {
+    graphic.setSymbol(this._originSymbolsMapping[gid])
   }
 
-  _highlight (graphic) {
-    this._saveOriginSymbol(graphic)
-    this._highlighter(graphic)
+  _highlight (item) {
+    this._saveOriginSymbol(item)
+    this._highlighter(item.graphic)
   }
 
-  _cancelHighlight (graphic) {
-    this._restoreOriginSymbol(graphic)
+  _cancelHighlight (item) {
+    this._restoreOriginSymbol(item)
   }
 
   /**
    * diff new selections and old selections, make sure graphics are highlighted correctly
    */
   _update (newSelections, oldSelections) {
-    const graphicsToAdd = differenceWith(newSelections, oldSelections)
-    const graphicsToRemove = differenceWith(oldSelections, newSelections)
-    graphicsToAdd.forEach(g => this._highlight(g))
-    graphicsToRemove.forEach(g => this._cancelHighlight(g))
+    const itemsToAdd = differenceBy(newSelections, oldSelections, s => s.gid)
+    const itemsToRemove = differenceBy(oldSelections, newSelections, s => s.gid)
+    itemsToAdd.forEach(item => this._highlight(item))
+    itemsToRemove.forEach(item => this._cancelHighlight(item))
   }
 
   /* public methods */
@@ -77,17 +78,18 @@ class GraphicSelectionManager extends EventEmitter {
    * return whether graphics is in the selections or not
    */
   includes (graphic) {
-    const match = this.selections.find(g => this._comparator(g, graphic))
+    const match = this.selections.find(s => this._comparator(s.graphic, graphic))
     return !!match
   }
 
   select (graphics) {
-    this._setSelections(graphics)
-    this.emit('select', this.selections)
+    this._setSelections(graphics.map(graphic => ({ gid: shortid.generate(), graphic })))
+    this.emit('select', graphics)
   }
 
   clear () {
     this._setSelections([])
+    this._originSymbolsMapping = {}
     this.emit('clear')
   }
 
@@ -96,9 +98,9 @@ class GraphicSelectionManager extends EventEmitter {
       return false
     }
     const { selections } = this
-    selections.push(graphic)
+    selections.push({ gid: shortid.generate(), graphic })
     this._setSelections(selections)
-    this.emit('add', graphic, this.selections)
+    this.emit('add', graphic, this.getSelections())
   }
 
   remove (graphic) {
@@ -106,12 +108,12 @@ class GraphicSelectionManager extends EventEmitter {
       return false
     }
     const { selections } = this
-    this._setSelections(selections.filter(g => !this._comparator(g, graphic)))
-    this.emit('remove', graphic, this.selections)
+    this._setSelections(selections.filter(s => !this._comparator(s.graphic, graphic)))
+    this.emit('remove', graphic, this.getSelections())
   }
 
   getSelections () {
-    
+    return this.selections.map(s => s.graphic)
   }
 
   /**
