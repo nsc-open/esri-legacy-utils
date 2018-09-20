@@ -1,0 +1,32 @@
+{
+  "name": "esri-legacy-utils",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nsc-open/esri-legacy-utils.git"
+  },
+  "keywords": [
+    "esri",
+    "legacy",
+    "utils",
+    "helpers",
+    "class"
+  ],
+  "author": "ygjack414@hotmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nsc-open/esri-legacy-utils/issues"
+  },
+  "homepage": "https://github.com/nsc-open/esri-legacy-utils#readme",
+  "dependencies": {
+    "esri-module-loader": "^1.0.0",
+    "eventemitter3": "^3.1.0",
+    "lodash.differencewith": "^4.5.0",
+    "shortid": "^2.2.13"
+  }
+}
