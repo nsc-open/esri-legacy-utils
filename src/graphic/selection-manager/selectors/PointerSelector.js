@@ -47,7 +47,6 @@ class PointerSelector extends BaseSelector {
   }
 
   _mapClickHandler = e => {
-    e.stopPropagation()
     this.selectionManager.clear()
   }
 

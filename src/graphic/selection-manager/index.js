@@ -119,9 +119,7 @@ class GraphicSelectionManager extends EventEmitter {
     if (this.includes(graphic)) {
       return false
     }
-    const { selections } = this
-    selections.push({ gid: shortid.generate(), graphic })
-    this._setSelections(selections)
+    this._setSelections([...this.selections, { gid: shortid.generate(), graphic }])
     this.emit('add', graphic, this.getSelections())
   }
 
