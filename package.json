@@ -2,7 +2,7 @@
   "name": "esri-legacy-utils",
   "version": "0.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "es5/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build-es5": "babel src --out-dir es5"
