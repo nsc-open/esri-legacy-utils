@@ -1,9 +1,12 @@
 import BaseSelector from './BaseSelector'
+import { SELECTOR_TYPE } from '../constants'
 
 class PointerSelector extends BaseSelector {
   
   constructor (args, { multiSelect = true }) {
     super(args)
+    this.type = SELECTOR_TYPE.POINTER
+
     this._multiSelect = multiSelect
     this._handlers = []
   }

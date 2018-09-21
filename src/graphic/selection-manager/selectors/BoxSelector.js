@@ -1,11 +1,14 @@
 import BaseSelector from './BaseSelector'
 import Loader from 'esri-module-loader'
+import { SELECTOR_TYPE } from '../constants'
 
 class BoxSelector extends BaseSelector {
   
   constructor (args) {
     super(args)
 
+    this.type = SELECTOR_TYPE.BOX
+    
     this._tempGraphicsLayer = null
     this._startPoint = null
     this._boxGraphic = null

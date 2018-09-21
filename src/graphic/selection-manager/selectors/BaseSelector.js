@@ -1,7 +1,8 @@
 class BaseSelector {
   
   constructor (selectionManager) {
-    this.selectionManager = selectionManager    
+    this.selectionManager = selectionManager
+    this.type = 'base'
   }
 
   destroy () {

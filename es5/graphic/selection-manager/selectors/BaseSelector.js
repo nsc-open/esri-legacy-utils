@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -13,10 +13,11 @@ var BaseSelector = function () {
     _classCallCheck(this, BaseSelector);
 
     this.selectionManager = selectionManager;
+    this.type = 'base';
   }
 
   _createClass(BaseSelector, [{
-    key: "destroy",
+    key: 'destroy',
     value: function destroy() {}
   }]);
 

@@ -4,6 +4,7 @@ import differenceBy from 'lodash.differenceby'
 import intersectionWith from 'lodash.intersectionwith'
 import shortid from 'shortid'
 
+import { SELECTOR_TYPE } from './constants'
 import highlighter from './highlighter'
 import BoxSelector from './selectors/BoxSelector'
 import PointerSelector from './selectors/PointerSelector'
@@ -149,6 +150,10 @@ class GraphicSelectionManager extends EventEmitter {
     mode = GraphicSelectionManager.MODE.POINTER,
     multiSelect = true
   }) {
+    if (this._active) {
+      this.deactivate()
+    }
+
     let selectorConstructor = null
     if (mode === GraphicSelectionManager.MODE.POINTER) {
       selectorConstructor = PointerSelector
@@ -178,9 +183,6 @@ class GraphicSelectionManager extends EventEmitter {
   }
 }
 
-GraphicSelectionManager.MODE = {
-  POINTER: 'pointer',
-  BOX: 'box'
-}
+GraphicSelectionManager.MODE = SELECTOR_TYPE
 
 export default GraphicSelectionManager

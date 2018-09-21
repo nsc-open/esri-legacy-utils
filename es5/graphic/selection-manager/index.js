@@ -26,6 +26,8 @@ var _shortid = require('shortid');
 
 var _shortid2 = _interopRequireDefault(_shortid);
 
+var _constants = require('./constants');
+
 var _highlighter = require('./highlighter');
 
 var _highlighter2 = _interopRequireDefault(_highlighter);
@@ -257,6 +259,10 @@ var GraphicSelectionManager = function (_EventEmitter) {
           _ref4$multiSelect = _ref4.multiSelect,
           multiSelect = _ref4$multiSelect === undefined ? true : _ref4$multiSelect;
 
+      if (this._active) {
+        this.deactivate();
+      }
+
       var selectorConstructor = null;
       if (mode === GraphicSelectionManager.MODE.POINTER) {
         selectorConstructor = _PointerSelector2.default;
@@ -292,9 +298,6 @@ var GraphicSelectionManager = function (_EventEmitter) {
   return GraphicSelectionManager;
 }(_eventemitter2.default);
 
-GraphicSelectionManager.MODE = {
-  POINTER: 'pointer',
-  BOX: 'box'
-};
+GraphicSelectionManager.MODE = _constants.SELECTOR_TYPE;
 
 exports.default = GraphicSelectionManager;

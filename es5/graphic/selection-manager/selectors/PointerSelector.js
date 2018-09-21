@@ -10,6 +10,8 @@ var _BaseSelector2 = require('./BaseSelector');
 
 var _BaseSelector3 = _interopRequireDefault(_BaseSelector2);
 
+var _constants = require('../constants');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -57,6 +59,8 @@ var PointerSelector = function (_BaseSelector) {
     _this._mapClickHandler = function (e) {
       _this.selectionManager.clear();
     };
+
+    _this.type = _constants.SELECTOR_TYPE.POINTER;
 
     _this._multiSelect = multiSelect;
     _this._handlers = [];
