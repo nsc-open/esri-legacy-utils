@@ -1,8 +1,10 @@
 import EventEmitter from 'eventemitter3'
+import differenceWith from 'lodash.differencewith'
 import differenceBy from 'lodash.differenceby'
+import intersectionWith from 'lodash.intersectionwith'
 import shortid from 'shortid'
 
-import highlighter from './highlight'
+import highlighter from './highlighter'
 import BoxSelector from './selectors/BoxSelector'
 import PointerSelector from './selectors/PointerSelector'
 
@@ -25,7 +27,7 @@ class GraphicSelectionManager extends EventEmitter {
 
     /* public attributes */
     this.map = map
-    this.graphicsLayer = graphicsLayer ? graphicsLayer : map.graphics
+    this.graphicsLayer = graphicsLayer || map.graphics
     this.selections = [] // [{ gid, graphic }]
 
     /* private attributes */
@@ -82,17 +84,37 @@ class GraphicSelectionManager extends EventEmitter {
     return !!match
   }
 
+  /**
+   * select graphics, will override the existing selections
+   */
   select (graphics) {
-    this._setSelections(graphics.map(graphic => ({ gid: shortid.generate(), graphic })))
+    const oldGraphics = this.getSelections()
+    const graphicsToAdd = differenceWith(graphics, oldGraphics, this._comparator)
+    const graphicsToRemain = intersectionWith(oldGraphics, graphics, this._comparator)
+    
+    this._setSelections([
+      ...(
+        this.selections.filter(item => graphicsToRemain.find(g => this._comparator(g, item.graphic)))
+      ),
+      ...(
+        graphicsToAdd.map(graphic => ({ gid: shortid.generate(), graphic }))
+      )
+    ])
     this.emit('select', graphics)
   }
 
+  /**
+   * clear selections
+   */
   clear () {
     this._setSelections([])
     this._originSymbolsMapping = {}
     this.emit('clear')
   }
 
+  /**
+   * add graphic into the selections
+   */
   add (graphic) {
     if (this.includes(graphic)) {
       return false
@@ -103,6 +125,9 @@ class GraphicSelectionManager extends EventEmitter {
     this.emit('add', graphic, this.getSelections())
   }
 
+  /**
+   * remove graphics from the selections
+   */
   remove (graphic) {
     if (!this.includes(graphic)) {
       return false
@@ -112,6 +137,9 @@ class GraphicSelectionManager extends EventEmitter {
     this.emit('remove', graphic, this.getSelections())
   }
 
+  /**
+   * get graphics from the selections
+   */
   getSelections () {
     return this.selections.map(s => s.graphic)
   }
@@ -135,6 +163,7 @@ class GraphicSelectionManager extends EventEmitter {
     }
 
     this._selector = new selectorConstructor(this, { multiSelect })
+    this._selector.activate()
     this._active = true
   }
 

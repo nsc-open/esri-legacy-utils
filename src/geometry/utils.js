@@ -1,4 +1,4 @@
-import { GEOMETRY_TYPES } from ' ./constants'
+import { GEOMETRY_TYPES } from './constants'
 
 const isGeometryInstance = (geometry = {}) => geometry.toJson && geometry.type && Object.values(GEOMETRY_TYPES).includes(geometry.type)
 const getPolylinePaths = (polyline = {}) => polyline.paths || polyline.curvePaths

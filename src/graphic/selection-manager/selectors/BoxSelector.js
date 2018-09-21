@@ -83,8 +83,8 @@ class BoxSelector extends BaseSelector {
       const { Extent, Polygon } = this._modules
       const { mapPoint } = e
       const ext = new Extent({
-        xmin: Math.min(this.startPoint.x, mapPoint.x), ymin: Math.min(this.startPoint.y, mapPoint.y),
-        xmax: Math.max(this.startPoint.x, mapPoint.x), ymax: Math.max(this.startPoint.y, mapPoint.y),
+        xmin: Math.min(this._startPoint.x, mapPoint.x), ymin: Math.min(this._startPoint.y, mapPoint.y),
+        xmax: Math.max(this._startPoint.x, mapPoint.x), ymax: Math.max(this._startPoint.y, mapPoint.y),
         spatialReference: { wkid: 102100 }
       })
       this._boxGraphic.setGeometry(Polygon.fromExtent(ext))
