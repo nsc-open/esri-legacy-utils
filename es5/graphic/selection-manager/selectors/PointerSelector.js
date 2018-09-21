@@ -55,7 +55,6 @@ var PointerSelector = function (_BaseSelector) {
     };
 
     _this._mapClickHandler = function (e) {
-      e.stopPropagation();
       _this.selectionManager.clear();
     };
 

@@ -10,17 +10,25 @@ var _eventemitter = require('eventemitter3');
 
 var _eventemitter2 = _interopRequireDefault(_eventemitter);
 
-var _lodash = require('lodash.differenceby');
+var _lodash = require('lodash.differencewith');
 
 var _lodash2 = _interopRequireDefault(_lodash);
+
+var _lodash3 = require('lodash.differenceby');
+
+var _lodash4 = _interopRequireDefault(_lodash3);
+
+var _lodash5 = require('lodash.intersectionwith');
+
+var _lodash6 = _interopRequireDefault(_lodash5);
 
 var _shortid = require('shortid');
 
 var _shortid2 = _interopRequireDefault(_shortid);
 
-var _highlight2 = require('./highlight');
+var _highlighter = require('./highlighter');
 
-var _highlight3 = _interopRequireDefault(_highlight2);
+var _highlighter2 = _interopRequireDefault(_highlighter);
 
 var _BoxSelector = require('./selectors/BoxSelector');
 
@@ -32,6 +40,8 @@ var _PointerSelector2 = _interopRequireDefault(_PointerSelector);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -41,7 +51,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var defaultGraphicComparator = function defaultGraphicComparator(g1, g2) {
   return g1 === g2;
 };
-var defaultHighlighter = _highlight3.default;
+var defaultHighlighter = _highlighter2.default;
 
 var GraphicSelectionManager = function (_EventEmitter) {
   _inherits(GraphicSelectionManager, _EventEmitter);
@@ -64,7 +74,7 @@ var GraphicSelectionManager = function (_EventEmitter) {
 
     /* public attributes */
     _this.map = map;
-    _this.graphicsLayer = graphicsLayer ? graphicsLayer : map.graphics;
+    _this.graphicsLayer = graphicsLayer || map.graphics;
     _this.selections = []; // [{ gid, graphic }]
 
     /* private attributes */
@@ -123,10 +133,10 @@ var GraphicSelectionManager = function (_EventEmitter) {
     value: function _update(newSelections, oldSelections) {
       var _this2 = this;
 
-      var itemsToAdd = (0, _lodash2.default)(newSelections, oldSelections, function (s) {
+      var itemsToAdd = (0, _lodash4.default)(newSelections, oldSelections, function (s) {
         return s.gid;
       });
-      var itemsToRemove = (0, _lodash2.default)(oldSelections, newSelections, function (s) {
+      var itemsToRemove = (0, _lodash4.default)(oldSelections, newSelections, function (s) {
         return s.gid;
       });
       itemsToAdd.forEach(function (item) {
@@ -153,14 +163,34 @@ var GraphicSelectionManager = function (_EventEmitter) {
       });
       return !!match;
     }
+
+    /**
+     * select graphics, will override the existing selections
+     */
+
   }, {
     key: 'select',
     value: function select(graphics) {
-      this._setSelections(graphics.map(function (graphic) {
+      var _this4 = this;
+
+      var oldGraphics = this.getSelections();
+      var graphicsToAdd = (0, _lodash2.default)(graphics, oldGraphics, this._comparator);
+      var graphicsToRemain = (0, _lodash6.default)(oldGraphics, graphics, this._comparator);
+
+      this._setSelections([].concat(_toConsumableArray(this.selections.filter(function (item) {
+        return graphicsToRemain.find(function (g) {
+          return _this4._comparator(g, item.graphic);
+        });
+      })), _toConsumableArray(graphicsToAdd.map(function (graphic) {
         return { gid: _shortid2.default.generate(), graphic: graphic };
-      }));
+      }))));
       this.emit('select', graphics);
     }
+
+    /**
+     * clear selections
+     */
+
   }, {
     key: 'clear',
     value: function clear() {
@@ -168,22 +198,29 @@ var GraphicSelectionManager = function (_EventEmitter) {
       this._originSymbolsMapping = {};
       this.emit('clear');
     }
+
+    /**
+     * add graphic into the selections
+     */
+
   }, {
     key: 'add',
     value: function add(graphic) {
       if (this.includes(graphic)) {
         return false;
       }
-      var selections = this.selections;
-
-      selections.push({ gid: _shortid2.default.generate(), graphic: graphic });
-      this._setSelections(selections);
+      this._setSelections([].concat(_toConsumableArray(this.selections), [{ gid: _shortid2.default.generate(), graphic: graphic }]));
       this.emit('add', graphic, this.getSelections());
     }
+
+    /**
+     * remove graphics from the selections
+     */
+
   }, {
     key: 'remove',
     value: function remove(graphic) {
-      var _this4 = this;
+      var _this5 = this;
 
       if (!this.includes(graphic)) {
         return false;
@@ -191,10 +228,15 @@ var GraphicSelectionManager = function (_EventEmitter) {
       var selections = this.selections;
 
       this._setSelections(selections.filter(function (s) {
-        return !_this4._comparator(s.graphic, graphic);
+        return !_this5._comparator(s.graphic, graphic);
       }));
       this.emit('remove', graphic, this.getSelections());
     }
+
+    /**
+     * get graphics from the selections
+     */
+
   }, {
     key: 'getSelections',
     value: function getSelections() {
@@ -227,6 +269,7 @@ var GraphicSelectionManager = function (_EventEmitter) {
       }
 
       this._selector = new selectorConstructor(this, { multiSelect: multiSelect });
+      this._selector.activate();
       this._active = true;
     }
 

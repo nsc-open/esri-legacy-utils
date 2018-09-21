@@ -20,47 +20,46 @@ var POINT = _constants.GEOMETRY_TYPES.POINT,
     POLYGON = _constants.GEOMETRY_TYPES.POLYGON,
     EXTENT = _constants.GEOMETRY_TYPES.EXTENT;
 
+var SYMBOLS_CACHE = void 0;
+
+var setSymbol = function setSymbol(graphic) {
+  var type = (0, _utils.getGeometryTypeFromJson)(graphic.geometry);
+  var symbol = void 0;
+  switch (type) {
+    case POINT:
+    case MULTIPOINT:
+      symbol = SYMBOLS_CACHE.point;
+      break;
+    case POLYLINE:
+      symbol = SYMBOLS_CACHE.line;
+      break;
+    case POLYGON:
+    case EXTENT:
+      symbol = SYMBOLS_CACHE.area;
+      break;
+  }
+  graphic.setSymbol(symbol);
+};
+
 exports.default = function (graphic) {
-  var symbols = void 0;
+  if (!SYMBOLS_CACHE) {
+    _esriModuleLoader2.default.loadModules(['SimpleMarkerSymbol', 'SimpleLineSymbol', 'SimpleFillSymbol', 'Color']).then(function (_ref) {
+      var SimpleMarkerSymbol = _ref.SimpleMarkerSymbol,
+          SimpleLineSymbol = _ref.SimpleLineSymbol,
+          SimpleFillSymbol = _ref.SimpleFillSymbol,
+          Color = _ref.Color;
 
-  var setSymbol = function setSymbol(g) {
-    var type = (0, _utils.getGeometryTypeFromJson)(g);
-    var symbol = void 0;
-    switch (type) {
-      case POINT:
-      case MULTIPOINT:
-        symbol = symbols.point;
-        break;
-      case POLYLINE:
-        symbol = symbols.line;
-        break;
-      case POLYGON:
-      case EXTENT:
-        symbol = symbols.area;
-        break;
-    }
-    g.setSymbol(symbol);
-  };
-
-  return function (g) {
-    if (!symbols) {
-      _esriModuleLoader2.default.loadModules(['SimpleMarkerSymbol', 'SimpleLineSymbol', 'SimpleFillSymbol', 'Color']).then(function (_ref) {
-        var SimpleMarkerSymbol = _ref.SimpleMarkerSymbol,
-            SimpleLineSymbol = _ref.SimpleLineSymbol,
-            SimpleFillSymbol = _ref.SimpleFillSymbol,
-            Color = _ref.Color;
-
-        var lightBlue = new Color([6, 253, 255]);
-        var fillColor = new Color([6, 253, 255, .5]);
-        symbols = {
-          point: new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, 10, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, lightBlue, 1), fillColor),
-          line: new SimpleLineSymbol(SimpleLineSymbol.STYLE_DASH, lightBlue, 3),
-          area: new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, lineSymbol, fillColor)
-        };
-        setSymbol(g);
-      });
-    } else {
-      setSymbol(g);
-    }
-  }(graphic);
+      var lightBlue = new Color([6, 253, 255]);
+      var fillColor = new Color([6, 253, 255, .5]);
+      var lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_DASH, lightBlue, 3);
+      SYMBOLS_CACHE = {
+        point: new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, 10, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, lightBlue, 1), fillColor),
+        line: lineSymbol,
+        area: new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, lineSymbol, fillColor)
+      };
+      setSymbol(graphic);
+    });
+  } else {
+    setSymbol(graphic);
+  }
 };

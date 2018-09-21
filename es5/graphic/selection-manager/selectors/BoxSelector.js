@@ -60,8 +60,8 @@ var BoxSelector = function (_BaseSelector) {
         var mapPoint = e.mapPoint;
 
         var ext = new Extent({
-          xmin: Math.min(_this.startPoint.x, mapPoint.x), ymin: Math.min(_this.startPoint.y, mapPoint.y),
-          xmax: Math.max(_this.startPoint.x, mapPoint.x), ymax: Math.max(_this.startPoint.y, mapPoint.y),
+          xmin: Math.min(_this._startPoint.x, mapPoint.x), ymin: Math.min(_this._startPoint.y, mapPoint.y),
+          xmax: Math.max(_this._startPoint.x, mapPoint.x), ymax: Math.max(_this._startPoint.y, mapPoint.y),
           spatialReference: { wkid: 102100 }
         });
         _this._boxGraphic.setGeometry(Polygon.fromExtent(ext));

@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.isMultiGeometry = exports.getGeometryType = exports.getGeometryTypeFromJson = undefined;
 
-var _constants = require(' ./constants');
+var _constants = require('./constants');
 
 var isGeometryInstance = function isGeometryInstance() {
   var geometry = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
